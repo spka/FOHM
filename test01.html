@@ -1,0 +1,141 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+
+    <meta charset="utf-8">
+
+    <title>HTML - test01 </title>
+    <meta name="description" content="HTML">
+    <meta name="author" content="SPK">
+
+    <script type="text/javascript" src="phaser.min.js"></script>
+    <script type="text/javascript" src="gamefunctions.js"></script>
+
+</head>
+
+<body oncontextmenu="return false;" style="margin: 0;">
+
+    <script>
+
+    // global game vars
+    var map,
+        layer,
+        keys,
+        player,
+        cursorMarker,
+        currentTile,
+        currentPointerObject,
+        tileSize,
+        gameWidth = window.innerWidth,
+        gameHeight = window.innerHeight;
+
+    // main phaser object
+    var game = new Phaser.Game(
+        gameWidth, 
+        gameHeight,
+        Phaser.CANVAS, 
+        'phaser-example', 
+        { 
+            preload: preload, 
+            create: create, 
+            update: update, 
+            render: render 
+        }
+    );
+
+    // main phaser stages 
+    function preload() {
+
+        game.load.image('tiles', 'catastrophi_tiles_16.png');
+        game.load.text('map01', 'http://localhost/fohm/map');
+        game.time.advancedTiming = true;
+
+    }
+
+    function create() {
+
+        // fullscreen setting
+        game.scale.fullScreenScaleMode = Phaser.ScaleManager.NO_SCALE;;
+
+        // create map
+        game.load.tilemap('map', null, game.cache.getText('map01'), Phaser.Tilemap.CSV);
+        map = game.add.tilemap('map', 16, 16);
+        map.addTilesetImage('tiles');
+        map.setCollisionBetween(54, 83);
+        
+        //  Create our layer
+        layer = map.createLayer(0);
+        layer.resizeWorld();
+        layer.inputEnabled = true;
+        layer.id = 'layermap1';
+        layer.events.onInputOver.add(over, this);
+        layer.events.onInputDown.add(pickTile, this);
+        // layer.debug = true;
+
+        keys = game.input.keyboard.createCursorKeys();
+
+        // tilepallet
+        tileSelector = game.add.group();
+        tileSelector.fixedToCamera = true;
+        tileSelector.visible = false;
+
+        var tileSelectorBg = game.make.graphics();
+        tileSelectorBg.beginFill(0x000000, 0.6);
+        tileSelectorBg.drawRect(0, 0, window.innerWidth, window.innerHeight);
+        tileSelectorBg.endFill();
+        tileSelector.add(tileSelectorBg);
+
+        tileStrip = tileSelector.create(0, 0, 'tiles');
+        tileStrip.inputEnabled = true;
+        tileStrip.id = 'tileselector1';
+        tileStrip.events.onInputDown.add(pickTile, this);
+        tileStrip.events.onInputOver.add(over, this);
+
+        keys['shift'] = game.input.keyboard.addKey(Phaser.Keyboard.SHIFT);
+        keys.shift.onDown.add(activateTileStrip, this);
+
+        //  Our painting marker
+        cursorMarker = game.add.graphics();
+        cursorMarker.lineStyle(1, 0x000000, 1);
+        cursorMarker.drawRect(0, 0, 16, 16);
+        // cursorMarker.z = 10;
+
+        game.input.addMoveCallback(updateMarker, this);
+
+        keys['ctrl'] = game.input.keyboard.addKey(Phaser.Keyboard.CONTROL);
+        keys.ctrl.onDown.add(gofull, this);
+
+        // todo: add escape key to trigger fullscreen and onclick dom.
+
+    }
+
+    function update() {
+
+        if (keys.left.isDown) {
+            game.camera.x -= 2;
+        }
+        else if (keys.right.isDown) {
+            game.camera.x += 2;
+        }
+
+        if (keys.up.isDown) {
+            game.camera.y -= 2;
+        }
+        else if (keys.down.isDown) {
+            game.camera.y += 2;
+        }
+
+    }
+
+    function render() {
+
+        // game.debug.body(tileStrip);
+        game.debug.text(game.time.fps || '-', 2, 14, "#00ff00"); 
+
+    }
+
+    </script>
+
+</body>
+</html>
