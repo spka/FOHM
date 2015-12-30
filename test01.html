@@ -25,8 +25,9 @@
         player,
         cursorMarker,
         currentTile,
-        currentPointerObject,
+        currentPointerTarget,
         tileSize,
+        tileStrip,
         gameWidth = window.innerWidth,
         gameHeight = window.innerHeight;
 
@@ -47,8 +48,9 @@
     // main phaser stages 
     function preload() {
 
-        game.load.image('tiles', 'catastrophi_tiles_16.png');
-        game.load.text('map01', 'http://localhost/fohm/map');
+        game.load.image('tiles1', 'catastrophi_tiles_16.png');
+        game.load.image('tiles2', 'tiles_new01.png');
+        game.load.text('map', 'http://localhost/fohm/map');
         game.time.advancedTiming = true;
 
     }
@@ -56,15 +58,23 @@
     function create() {
 
         // fullscreen setting
-        game.scale.fullScreenScaleMode = Phaser.ScaleManager.NO_SCALE;;
+        game.scale.fullScreenScaleMode = Phaser.ScaleManager.NO_SCALE;
+
+        // key setup
+        keys = game.input.keyboard.createCursorKeys();
+        keys['shift'] = game.input.keyboard.addKey(Phaser.Keyboard.SHIFT);
+        keys['ctrl'] = game.input.keyboard.addKey(Phaser.Keyboard.CONTROL);
+        keys.shift.onDown.add(activateTileStrip, this);
+        keys.ctrl.onDown.add(gofull, this);
 
         // create map
-        game.load.tilemap('map', null, game.cache.getText('map01'), Phaser.Tilemap.CSV);
+        game.load.tilemap('map', null, game.cache.getText('map'), Phaser.Tilemap.CSV);
         map = game.add.tilemap('map', 16, 16);
-        map.addTilesetImage('tiles');
+        // map.addTilesetImage('tiles1');
+        map.addTilesetImage('tiles2');
         map.setCollisionBetween(54, 83);
         
-        //  Create our layer
+        //  create map layer, note: retrieve layer 0 from tilemap with createLayer
         layer = map.createLayer(0);
         layer.resizeWorld();
         layer.inputEnabled = true;
@@ -73,38 +83,40 @@
         layer.events.onInputDown.add(pickTile, this);
         // layer.debug = true;
 
-        keys = game.input.keyboard.createCursorKeys();
-
-        // tilepallet
+        // create tileselector
         tileSelector = game.add.group();
         tileSelector.fixedToCamera = true;
         tileSelector.visible = false;
 
         var tileSelectorBg = game.make.graphics();
-        tileSelectorBg.beginFill(0x000000, 0.6);
+        tileSelectorBg.beginFill(0x000000, 1);
         tileSelectorBg.drawRect(0, 0, window.innerWidth, window.innerHeight);
         tileSelectorBg.endFill();
         tileSelector.add(tileSelectorBg);
 
-        tileStrip = tileSelector.create(0, 0, 'tiles');
+        map.createBlankLayer('tileselect', 10, 14, 16, 16, tileSelector);
+        putDefaultTiles('tiles1', 16, 16, 'tileselect', map);
+
+        tileStrip = tileSelector.getChildAt(1);
+        tileStrip.fixedToCamera = false;
+        tileStrip.scrollFactorX = 0;
+        tileStrip.scrollFactorY = 0;
+
+        var centerx = Math.round((window.innerWidth / 2) - (tileStrip.layer.widthInPixels / 2)),
+            centery = Math.round((window.innerHeight / 2) - (tileStrip.layer.heightInPixels / 2));
+
+        tileStrip.position.set(centerx, centery);
+
         tileStrip.inputEnabled = true;
         tileStrip.id = 'tileselector1';
         tileStrip.events.onInputDown.add(pickTile, this);
         tileStrip.events.onInputOver.add(over, this);
 
-        keys['shift'] = game.input.keyboard.addKey(Phaser.Keyboard.SHIFT);
-        keys.shift.onDown.add(activateTileStrip, this);
-
-        //  Our painting marker
+        // painting marker
         cursorMarker = game.add.graphics();
-        cursorMarker.lineStyle(1, 0x000000, 1);
+        cursorMarker.lineStyle(1, 0x00ff00, 1);
         cursorMarker.drawRect(0, 0, 16, 16);
-        // cursorMarker.z = 10;
-
         game.input.addMoveCallback(updateMarker, this);
-
-        keys['ctrl'] = game.input.keyboard.addKey(Phaser.Keyboard.CONTROL);
-        keys.ctrl.onDown.add(gofull, this);
 
         // todo: add escape key to trigger fullscreen and onclick dom.
 
@@ -113,17 +125,17 @@
     function update() {
 
         if (keys.left.isDown) {
-            game.camera.x -= 2;
+            game.camera.x -= 5;
         }
         else if (keys.right.isDown) {
-            game.camera.x += 2;
+            game.camera.x += 5;
         }
 
         if (keys.up.isDown) {
-            game.camera.y -= 2;
+            game.camera.y -= 5;
         }
         else if (keys.down.isDown) {
-            game.camera.y += 2;
+            game.camera.y += 5;
         }
 
     }

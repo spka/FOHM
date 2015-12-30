@@ -8,7 +8,7 @@
     	// var_dump($arr);
 
 
-        $fp = fopen('map01.csv', 'w');
+        $fp = fopen('map02.csv', 'w');
         // fputcsv($fp, explode(',', $arr));
 
 		foreach ($arr as $file) {
@@ -24,8 +24,8 @@
 
      }
 
-    $map = fopen('map01.csv', 'r') or die('Unable to open file!');
-    echo fread($map,filesize('map01.csv'));
+    $map = fopen('map02.csv', 'r') or die('Unable to open file!');
+    echo fread($map,filesize('map02.csv'));
     fclose($map);
 
 ?>

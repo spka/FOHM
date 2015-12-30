@@ -3,7 +3,7 @@ function postMap(map) {
 	// console.log(map);
 
     var xhttp = new XMLHttpRequest();
-    xhttp.open('POST', 'http://localhost/map.php', true);
+    xhttp.open('POST', 'http://localhost/fohm/map.php', true);
     xhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded; charset=UTF-8');
     xhttp.send('map='+JSON.stringify(map));
 
@@ -38,16 +38,28 @@ function pickTile(sprite, pointer) {
 
 	// make a map and picktile for real
 
-	if (game.input.activePointer.leftButton.isDown) {
+	if (game.input.activePointer.rightButton.isDown && sprite.layer.name == 'layer') {
 
-	var locX = game.math.snapToFloor((pointer.x - sprite.x), 16) / 16;
-	var locY = game.math.snapToFloor((pointer.y - sprite.y), 16) / 16;
-	var maxTileWidth = sprite.width / 16;
+		currentTile = map.getTile(layer.getTileX(pointer.worldX), layer.getTileY(pointer.worldY), sprite.layer.name);
 
-    currentTile = locX + (locY * maxTileWidth);
+    	// console.log(layer.getTileX(game.input.activePointer.worldX), layer.getTileY(game.input.activePointer.worldY));
+    	// console.log(sprite.key, 'tileselect: ', pointer);
 
-    // console.log(locX, locY, sprite.width);
-    // console.log(sprite.key, 'tileselect: ', pointer);
+	} 
+
+	if (game.input.activePointer.rightButton.isDown && sprite.layer.name == 'tileselect') {
+
+		var locX = game.math.snapToFloor((pointer.x - sprite.x), 16) / 16;
+		var locY = game.math.snapToFloor((pointer.y - sprite.y), 16) / 16;
+
+		currentTile = map.getTile(locX, locY, sprite.layer.name);
+		// var maxTileWidth = sprite.width / 16;
+
+    	// currentTile = locX + (locY * maxTileWidth);
+    	// console.log(map.getTile(1, 1, sprite.layer.name));
+
+    	// console.log(game.math.snapToFloor((pointer.x - sprite.x), 16) / 16);
+
 	}
 
 }
@@ -62,7 +74,7 @@ function activateTileStrip() {
 
 function over(sprite, pointer) {
 	currentPointerTarget = sprite.id;
-	// console.log(game.input.activePointer);
+	// console.log(currentPointerTarget);
 }
 
 function gofull() {
@@ -102,13 +114,32 @@ function gofull() {
 }
 
 function updateMarker(pointer) {
+	// console.log(game.input.activePointer.x);
 
-    cursorMarker.x = layer.getTileX(game.input.activePointer.worldX) * 16;
-    cursorMarker.y = layer.getTileY(game.input.activePointer.worldY) * 16;
+
+	if(currentPointerTarget == 'layermap1') {
+    	cursorMarker.x = layer.getTileX(game.input.activePointer.worldX) * 16;
+    	cursorMarker.y = layer.getTileY(game.input.activePointer.worldY) * 16;
+
+    	// cursorMarker.fixedToCamera = false;
+	}
+
+	if (currentPointerTarget == 'tileselector1') {
+
+		// console.log(Math.floor((game.input.activePointer.x - tileStrip.position.x) / 16));
+		// console.log(game.input.activePointer.x, tileStrip.position.x);
+		// console.log((game.input.activePointer.worldX));
+		// cursorMarker.fixedToCamera = true;
+
+		cursorMarker.x = (Math.floor((game.input.activePointer.worldX - tileStrip.position.x) / 16) * 16) + tileStrip.position.x;
+    	cursorMarker.y = (Math.floor((game.input.activePointer.worldY - tileStrip.position.y) / 16) * 16) + tileStrip.position.y;
+
+    	// check screenXY for new calc
+	}
 
     // game.world.bringToTop(cursorMarker);
 
-    if(currentTile != undefined && game.input.activePointer.rightButton.isDown && currentPointerTarget == 'layermap1') {
+    if(currentTile != undefined && game.input.activePointer.leftButton.isDown && currentPointerTarget == 'layermap1') {
 
 	    map.putTile(currentTile, layer.getTileX(cursorMarker.x), layer.getTileY(cursorMarker.y), layer);
 
@@ -135,5 +166,30 @@ function updateMarker(pointer) {
 	    postMap(csvMap);
 
 	}
+
+}
+
+function putDefaultTiles(tilesetImage, tileWidth, tileHeight, layerName, mapVar) {
+
+	var tilesx = game.cache.getImage(tilesetImage).width / tileWidth,
+		tilesy = game.cache.getImage(tilesetImage).height / tileHeight,
+		totalTiles = tilesx * tilesy;
+
+		// console.log(totalTiles);
+
+	// make 15 per row:
+	for (var i = 0; i < (totalTiles / 10 ); i++) {
+		for (var j = 0; j < 10; j++) {
+			mapVar.putTile((i*10)+j, j, i, layerName);
+			// console.log((i*10)+j)
+		};
+	};
+
+	// make exact image proportions tilemap:
+	// for (var i = 0; i < tilesy; i++) {
+	// 	for (var j = 0; j < tilesx; j++) {
+	// 		mapVar.putTile((tilesx * i) + j + 1, j, i, layerName);
+	// 	};
+	// };
 
 }
